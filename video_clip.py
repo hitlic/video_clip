@@ -27,7 +27,6 @@ except Exception as e:
 
 
 def main(window):
-
     window_width = 1200
     window_height = 300
     unit_width = 0.3
@@ -111,7 +110,6 @@ class AudioBox(tk.Canvas):  # pylint: disable=too-many-ancestors
     def do_label(self, do):
         if self.drag_shape is None:
             return
-
         start, end = self.get_pos()
         if do:
             self.audio_keeper.do_label(start, end, 1)
@@ -144,11 +142,9 @@ class AudioBox(tk.Canvas):  # pylint: disable=too-many-ancestors
         audio_samples = self.audio_keeper.page_sample
         lines = [make_line(y1, y2, i, self.unit_width, self.box_height) for i, (y1, y2)
                  in enumerate(zip(audio_samples[:-1], audio_samples[1:]))]
-
         # 画音频
         for line in lines:
             self.create_line(*line, fill='blue')
-
         # 画标签
         for line in make_label_lines(self.audio_keeper.page_label_sample, self.unit_width, self.box_height):
             self.create_line(line, fill='red', width=10)
@@ -186,7 +182,6 @@ class AudioKeeper:
         self.audio_sample_rate = audio_sample_rate
 
         self.label_times = 0
-
         self.page_id = -1
         self.page_start = 0
         self.page_end = 0
@@ -287,15 +282,12 @@ def clip_video(video, labels, out_file='output.mp4', sample_rate=44100):
 
     # 根据片段提取视频
     videos = []
-
-    # videos.append(video.subclip(0, first_end/sample_rate))
     for i, (start, end) in enumerate(zip(starts, ends)):
         print(f'片段 {i}/{len(starts)}')
         videos.append(video.subclip(start/sample_rate, end/sample_rate))
 
     # 合并视频
     cat_videos = concatenate_videoclips(videos)
-
     # 保存视频
     cat_videos.to_videofile(out_file, fps=24, remove_temp=False)
 
