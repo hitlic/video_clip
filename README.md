@@ -4,10 +4,11 @@
 ![](./fig.png)
 
 ## 依赖
-依赖如下工具包，首次运行会自动安装
-- numpy
-- moviepy
-- sounddevice
+- Python >= 3.6
+- 如下工具包，首次运行会自动安装
+  - numpy
+  - moviepy
+  - sounddevice
 
 ## 运行
 `python video_clip.py`
