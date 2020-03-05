@@ -7,6 +7,9 @@
 - moviepy
 - sounddevice
 
+# 运行
+`python video_clip.py`
+
 # 使用
 
 - 标注：Space
