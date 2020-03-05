@@ -1,3 +1,7 @@
+"""
+@Author: LiuChen
+"""
+
 import tkinter as tk
 from math import floor
 import os
