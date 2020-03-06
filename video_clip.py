@@ -5,6 +5,7 @@
 import tkinter as tk
 from math import floor
 import os
+os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"
 
 window = tk.Tk()
 try:
@@ -12,18 +13,14 @@ try:
     import sounddevice as sd
     from moviepy.editor import VideoFileClip, concatenate_videoclips  # 本行必须在 tk.Tk()之后，不然会出错
 except Exception as e:
-    print('\n正在安装需要的工具包，若出错很可能是网络访问问题，确认网络连接后重新运行即可 ... ... ...\n')
-    o = os.popen('pip install numpy')
-    print(o.read())
-    o = os.popen('pip install sounddevice')
-    print(o.read())
-    o = os.popen('pip install moviepy')
+    print('正在安装需要的工具包，若出错很可能是网络访问问题，确认网络连接后重新运行 ... ... ...\n')
+    o = os.popen('pip install numpy moviepy sounddevice')
     print(o.read())
     print('\n工具包安装完成，若运行出错重新运行即可！\n')
 
     import numpy as np
     import sounddevice as sd
-    from moviepy.editor import VideoFileClip, concatenate_videoclips
+    from moviepy.editor import VideoFileClip, concatenate_videoclips  # 本行必须在 tk.Tk()之后，不然会出错
 
 
 def main(window):
@@ -32,7 +29,7 @@ def main(window):
     unit_width = 0.3
     sample_step = 50
 
-    video_file = input('请输入视频路戏或文件名（当前路径），支持的视频格式有 .ogv、.mp4、.mpeg、.avi、.mov：')
+    video_file = input('\n请输入视频路戏或文件名（当前路径），支持的视频格式有 .ogv、.mp4、.mpeg、.avi、.mov：')
     if video_file == '':
         video_file = "./video.mov"
     print("正在读入、处理视频文件，请耐心等待 ... ...")
@@ -69,7 +66,6 @@ class AudioBox(tk.Canvas):  # pylint: disable=too-many-ancestors
         self.drag_end_x = None
         self.drag_up_y = self.box_height * 0.5 + self.box_height * 0.5 * 0.8
         self.drag_down_y = self.box_height * 0.5 - self.box_height * 0.5 * 0.8
-
         self.drag_shape = None
 
     def get_pos(self):
@@ -96,7 +92,7 @@ class AudioBox(tk.Canvas):  # pylint: disable=too-many-ancestors
 
     def on_drag_end(self, event):  # pylint: disable=unused-argument
         self.drag_start_x = None
-        if self.drag_start_x_ is None:
+        if self.drag_start_x_ is None or self.drag_shape is None:
             return
         start, end = self.get_pos()
         self.audio_keeper.play(start, end)
@@ -123,11 +119,13 @@ class AudioBox(tk.Canvas):  # pylint: disable=too-many-ancestors
     def on_page_down(self, event):  # pylint: disable=unused-argument
         if self.audio_keeper.next_page():
             self.delete('all')
+            self.drag_shape = None
             self.draw_lines()
 
     def on_page_up(self, event):  # pylint: disable=unused-argument
         if self.audio_keeper.prev_page():
             self.delete('all')
+            self.drag_shape = None
             self.draw_lines()
 
     def on_key(self, event):
@@ -251,7 +249,6 @@ def make_line(n1, n2, pos, unit_width, box_height):
 
 def make_label_lines(label_sample, unit_width, box_height):
     """创建所有标签线段"""
-    # label_sample = self.audio_keeper.page_label_sample
     seg_points = np.nonzero(label_sample[:-1] != label_sample[1:])[0]
     seg_points += 1
     if label_sample[0] == 1:
@@ -263,8 +260,7 @@ def make_label_lines(label_sample, unit_width, box_height):
     labels_segs = zip(starts, ends)
     labels_lines = []
     for s, e in labels_segs:
-        labels_lines.append((s * unit_width, box_height-10,
-                             e * unit_width, box_height-10))
+        labels_lines.append((s * unit_width, box_height-10, e * unit_width, box_height-10))
     return labels_lines
 
 
