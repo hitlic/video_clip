@@ -30,8 +30,13 @@ def main(window):
     sample_step = 50
 
     video_file = input('\n请输入视频路戏或文件名（当前路径），支持的视频格式有 .ogv、.mp4、.mpeg、.avi、.mov：')
+
     if video_file == '':
         video_file = "./video.mov"
+    while not os.path.exists(video_file):
+        print(f'文件{video_file}不存在，请检查！')
+        video_file = input('\n请输入视频路戏或文件名（当前路径），支持的视频格式有 .ogv、.mp4、.mpeg、.avi、.mov：')
+
     print("正在读入、处理视频文件，请耐心等待 ... ...")
     # 使用moviepy加载视频中的音频
     sample_rate = 44100
@@ -39,7 +44,7 @@ def main(window):
     sound = video.audio.to_soundarray(fps=sample_rate)
     audio = sound[:, 0]
 
-    window.title("[标注：Space] | [取消标注：BackSpace] | [下一页：F、Return、或Down] | 上一页：B或Up] | [保存标注：S，输出labels.npy] | [导出视频：Ctrl+O，输出output.mp4]")
+    window.title("[标注：Space] | [取消标注：BackSpace] | [下一页：F、Return、或Down] | 上一页：B或Up] | [导出视频：Ctrl+O] | [保存标注：S，输出labels.npy]")
     audio_keeper = AudioKeeper(audio, sample_step, page_size=window_width/unit_width, audio_sample_rate=sample_rate)
     canvas = AudioBox(window, width=window_width, height=window_height, unit_width=unit_width,
                       audio_keeper=audio_keeper, video=video)
@@ -149,10 +154,17 @@ class AudioBox(tk.Canvas):  # pylint: disable=too-many-ancestors
 
     def on_clip(self, event):  # pylint: disable=unused-argument
         """根据标签切分视频"""
-        print('视频剪切中... ...')
-        clip_video(self.video, self.audio_keeper.labels, './output.mp4', self.audio_keeper.audio_sample_rate)
+        out_name = input("请输入文件名：")
+        if out_name.strip() == '':
+            out_name = './output.mp4'
+            print('使用默认文件名 output.mp4')
+        elif not out_name.endswith('.mp4'):
+            out_name = out_name.replace('.', '')
+            out_name += '.mp4'
+        print('视频导出中，可能需要几分钟时间，请耐心等待... ...')
+        clip_video(self.video, self.audio_keeper.labels, out_name, self.audio_keeper.audio_sample_rate)
         print('视频剪切成功！输出文件为 output.mp4')
-        tmp_file = './outputTEMP_MPY_wvf_snd.mp3'
+        tmp_file = f'./{out_name}TEMP_MPY_wvf_snd.mp3'
         if os.path.exists(tmp_file):
             os.remove(tmp_file)
 
