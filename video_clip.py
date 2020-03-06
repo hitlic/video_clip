@@ -23,7 +23,7 @@ except Exception as e:
 
     import numpy as np
     import sounddevice as sd
-    from moviepy.editor import VideoFileClip, concatenate_videoclips  # 本行必须在 tk.Tk()之后，不然会出错
+    from moviepy.editor import VideoFileClip, concatenate_videoclips
 
 
 def main(window):
@@ -226,7 +226,7 @@ class AudioKeeper:
             return False
         self.page_id += 1
         self.create_page()
-        print(f'页码：{self.page_id}/{self.max_page}')
+        print(f'页码：{self.page_id+1}/{self.max_page}')
         return True
 
     def prev_page(self):
@@ -236,7 +236,7 @@ class AudioKeeper:
             return False
         self.page_id -= 1
         self.create_page()
-        print(f'页码：{self.page_id}/{self.max_page}')
+        print(f'页码：{self.page_id+1}/{self.max_page}')
         return True
 
 
