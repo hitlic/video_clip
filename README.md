@@ -5,10 +5,16 @@
 
 ## 依赖
 - Python >= 3.6
-- 如下工具包，首次运行会自动安装
+- 如下工具包，首次运行会自动安装（由于网络问题自动安装可能失败，可手动安装）
   - numpy
   - moviepy
   - sounddevice
+- 手动安装方法
+  - step1:配置pip清华镜像
+    - `pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple`
+  - step2:安装工具包
+    - `pip install numpy moviepy sounddevice`
+  - 注意：若提示权限问题，以管理员身份运行cmd即可
 
 ## 运行
 `python video_clip.py`
