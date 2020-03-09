@@ -30,26 +30,10 @@ def main(window):
     unit_width = 0.3
     sample_step = 50
 
-    video_file = input('\n请输入视频路戏或文件名（当前路径），支持的视频格式有 .ogv、.mp4、.mpeg、.avi、.mov：')
-
-    if video_file == '':
-        video_file = "./video.mov"
-    while not os.path.exists(video_file):
-        print(f'文件{video_file}不存在，请检查！')
-        video_file = input('\n请输入视频路戏或文件名（当前路径），支持的视频格式有 .ogv、.mp4、.mpeg、.avi、.mov：')
-
-    print("正在读入、处理视频文件，请耐心等待 ... ...")
-    # 使用moviepy加载视频中的音频
-    sample_rate = 44100
-    video = VideoFileClip(video_file)
-    sound = video.audio.to_soundarray(fps=sample_rate)
-    audio = sound[:, 0]
-
-    window.title("[标注：Space] | [取消标注：BackSpace] | [下一页：F、Return、或Down] | 上一页：B或Up] | [导出视频：Ctrl+E] | [保存标注：S，输出labels.npy]")
-    audio_keeper = AudioKeeper(audio, sample_step, page_size=window_width/unit_width, audio_sample_rate=sample_rate)
-    canvas = AudioBox(window, width=window_width, height=window_height, unit_width=unit_width,
-                      audio_keeper=audio_keeper, video=video)
+    window.title("[标注：Space] | [取消标注：BackSpace] | [下一页：F、Return、或Down] | 上一页：B或Up] | [跳转页面：G] | [打开：O] | [导出视频：Ctrl+E] | [保存标注：S]")
+    canvas = AudioBox(window, width=window_width, height=window_height, unit_width=unit_width, sample_step=sample_step)
     canvas.pack()
+    canvas.open_video()
     canvas.draw_lines()
     canvas.bind_events()
     window.bind('<FocusIn>', lambda e: canvas.focus_set())
@@ -57,14 +41,16 @@ def main(window):
 
 
 class AudioBox(tk.Canvas):  # pylint: disable=too-many-ancestors
-    def __init__(self, root, width, height, unit_width, audio_keeper, video):
+    def __init__(self, root, width, height, unit_width, sample_step):
         super().__init__(root, width=width, height=height)
-        self.unit_width = unit_width
         self.box_width = width
         self.box_height = height
-        self.audio_keeper = audio_keeper
-        self.audio_keeper.next_page()
-        self.video = video
+        self.unit_width = unit_width
+        self.sample_step = sample_step
+
+        self.sample_rate = 44100
+        self.audio_keeper = None
+        self.video = None
 
         # 鼠标拖出的矩形
         self.drag_start_x = None   # 会被置None
@@ -73,6 +59,29 @@ class AudioBox(tk.Canvas):  # pylint: disable=too-many-ancestors
         self.drag_up_y = self.box_height * 0.5 + self.box_height * 0.5 * 0.8
         self.drag_down_y = self.box_height * 0.5 - self.box_height * 0.5 * 0.8
         self.drag_shape = None
+
+    def open_video(self):
+        video_file = input('\n请输入视频路戏或文件名（当前路径），支持的视频格式有 .ogv、.mp4、.mpeg、.avi、.mov：')
+        if video_file == '':
+            video_file = "./video.mov"
+        while not os.path.exists(video_file):
+            print(f'文件{video_file}不存在，请检查！')
+            video_file = input('\n请输入视频路戏或文件名（当前路径），支持的视频格式有 .ogv、.mp4、.mpeg、.avi、.mov：')
+
+        video_name = video_file[:video_file.rindex('.')]
+        self.video_name = video_name
+
+        print("正在读入、处理视频文件，请耐心等待 ... ...")
+        # 使用moviepy加载视频中的音频
+        video = VideoFileClip(video_file)
+        sound = video.audio.to_soundarray(fps=self.sample_rate)
+        audio = sound[:, 0]
+        page_size = self.box_width/self.unit_width
+        audio_keeper = AudioKeeper(audio, video_name, self.sample_step, page_size, self.sample_rate)
+
+        self.video = video
+        self.audio_keeper = audio_keeper
+        self.audio_keeper.next_page()
 
     def get_pos(self):
         start = int(self.drag_start_x_/self.unit_width)
@@ -134,6 +143,26 @@ class AudioBox(tk.Canvas):  # pylint: disable=too-many-ancestors
             self.drag_shape = None
             self.draw_lines()
 
+    def go_page(self):
+        """跳转页码"""
+        page_num = input('请输入页码：')
+        if page_num == '':
+            page_num = self.audio_keeper.max_page
+        elif not page_num.isdigit():
+            print("请输入正确页码！")
+            return
+        else:
+            page_num = int(page_num)
+        if page_num > self.audio_keeper.max_page:
+            page_num = self.audio_keeper.max_page
+        if page_num < 1:
+            page_num = 1
+        self.audio_keeper.page_id = page_num - 2
+        if self.audio_keeper.next_page():
+            self.delete('all')
+            self.drag_shape = None
+            self.draw_lines()
+
     def on_key(self, event):
         if event.char == 'f':
             self.on_page_down(event)  # 下页
@@ -141,6 +170,13 @@ class AudioBox(tk.Canvas):  # pylint: disable=too-many-ancestors
             self.on_page_up(event)    # 上页
         elif event.char == 's':
             self.audio_keeper.save_label()  # 保存标签
+        elif event.char == 'g':
+            self.go_page()
+        elif event.char == 'o':
+            self.open_video()
+            self.delete('all')
+            self.drag_shape = None
+            self.draw_lines()
 
     def draw_lines(self):
         audio_samples = self.audio_keeper.page_sample
@@ -156,19 +192,10 @@ class AudioBox(tk.Canvas):  # pylint: disable=too-many-ancestors
     def on_clip(self, event):  # pylint: disable=unused-argument
         """根据标签切分视频"""
         self.audio_keeper.save_label()  # 保存标签
-        out_name = input("请输入文件名：")
-        if out_name.strip() == '':
-            out_name = './output.mp4'
-            print('使用默认文件名 output.mp4')
-        elif not out_name.endswith('.mp4'):
-            out_name = out_name.replace('.', '')
-            out_name += '.mp4'
+        out_name = self.video_name + '.mp4'
         print('视频导出中，可能需要几分钟时间，请耐心等待... ...')
         clip_video(self.video, self.audio_keeper.labels, out_name, self.audio_keeper.audio_sample_rate)
         print('视频剪切成功！')
-        tmp_file = f'./{out_name.replace(".mp4", "")}TEMP_MPY_wvf_snd.mp3'
-        if os.path.exists(tmp_file):
-            os.remove(tmp_file)
 
     def bind_events(self):
         self.focus_set()
@@ -185,10 +212,15 @@ class AudioBox(tk.Canvas):  # pylint: disable=too-many-ancestors
 
 
 class AudioKeeper:
-    def __init__(self, audio, sample_step, page_size, audio_sample_rate):
+    def __init__(self, audio, label_name, sample_step, page_size, audio_sample_rate):
         self.audio = audio
+        self.label_name = label_name
         self.sample_step = sample_step
-        self.labels = np.array([0] * len(audio))
+        self.labels = None
+        if os.path.exists(f'{label_name}.npy'):  # 若标签已存在则导入
+            self.labels = np.load(f'{label_name}.npy')
+        if self.labels is None or len(self.labels) != len(audio):
+            self.labels = np.array([0] * len(audio))
         self.page_overlap = 5000
         self.page_size = int(page_size * sample_step - self.page_overlap)
         self.audio_sample_rate = audio_sample_rate
@@ -222,7 +254,7 @@ class AudioKeeper:
             self.save_label()
 
     def save_label(self):
-        np.save('labels.npy', self.labels)
+        np.save(f'{self.label_name}.npy', self.labels)
         print('标签保存成功！')
 
     def create_page(self):
@@ -278,7 +310,7 @@ def make_label_lines(label_sample, unit_width, box_height):
     return labels_lines
 
 
-def clip_video(video, labels, out_file='output.mp4', sample_rate=44100):
+def clip_video(video, labels, out_file, sample_rate=44100):
     """根据标签剪切视频"""
     # 查找片段
     seg_points = np.nonzero(labels[:-1] != labels[1:])[0]
@@ -298,7 +330,9 @@ def clip_video(video, labels, out_file='output.mp4', sample_rate=44100):
     # 合并视频
     cat_videos = concatenate_videoclips(videos)
     # 保存视频
-    cat_videos.to_videofile(out_file, fps=24, remove_temp=False)
+    audio_file = out_file.replace('.mp4', '-audio.mp4')
+    cat_videos.write_videofile(out_file, fps=24, audio_fps=sample_rate, audio_codec="aac",
+                               temp_audiofile=audio_file, remove_temp=False)
 
 
 if __name__ == '__main__':
