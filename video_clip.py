@@ -4,6 +4,7 @@
 
 import tkinter as tk
 from math import floor
+from tqdm import tqdm
 import os
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"
 
@@ -163,8 +164,8 @@ class AudioBox(tk.Canvas):  # pylint: disable=too-many-ancestors
             out_name += '.mp4'
         print('视频导出中，可能需要几分钟时间，请耐心等待... ...')
         clip_video(self.video, self.audio_keeper.labels, out_name, self.audio_keeper.audio_sample_rate)
-        print('视频剪切成功！输出文件为 output.mp4')
-        tmp_file = f'./{out_name}TEMP_MPY_wvf_snd.mp3'
+        print('视频剪切成功！')
+        tmp_file = f'./{out_name.replace(".mp4", "")}TEMP_MPY_wvf_snd.mp3'
         if os.path.exists(tmp_file):
             os.remove(tmp_file)
 
@@ -290,8 +291,7 @@ def clip_video(video, labels, out_file='output.mp4', sample_rate=44100):
 
     # 根据片段提取视频
     videos = []
-    for i, (start, end) in enumerate(zip(starts, ends)):
-        print(f'片段 {i}/{len(starts)}')
+    for start, end in tqdm(list(zip(starts, ends)), desc="视频片段提取"):
         videos.append(video.subclip(start/sample_rate, end/sample_rate))
 
     # 合并视频
