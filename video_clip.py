@@ -199,7 +199,7 @@ class AudioKeeper:
         self.page_end = 0
         self.page_sample = None
 
-        self.max_page = floor(len(audio) / self.page_size)
+        self.max_page = floor(len(audio) / self.page_size) + 1
         print('Max Page:', self.max_page)
 
     def real_pos(self, start, end):
@@ -234,7 +234,7 @@ class AudioKeeper:
 
     def next_page(self):
         """前一页"""
-        if self.page_id == self.max_page:
+        if self.page_id == self.max_page - 1:
             return False
         self.page_id += 1
         self.create_page()
