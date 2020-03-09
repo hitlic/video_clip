@@ -45,7 +45,7 @@ def main(window):
     sound = video.audio.to_soundarray(fps=sample_rate)
     audio = sound[:, 0]
 
-    window.title("[标注：Space] | [取消标注：BackSpace] | [下一页：F、Return、或Down] | 上一页：B或Up] | [导出视频：Ctrl+O] | [保存标注：S，输出labels.npy]")
+    window.title("[标注：Space] | [取消标注：BackSpace] | [下一页：F、Return、或Down] | 上一页：B或Up] | [导出视频：Ctrl+E] | [保存标注：S，输出labels.npy]")
     audio_keeper = AudioKeeper(audio, sample_step, page_size=window_width/unit_width, audio_sample_rate=sample_rate)
     canvas = AudioBox(window, width=window_width, height=window_height, unit_width=unit_width,
                       audio_keeper=audio_keeper, video=video)
@@ -181,7 +181,7 @@ class AudioBox(tk.Canvas):  # pylint: disable=too-many-ancestors
         self.bind('<Down>', self.on_page_down)
         self.bind('<Up>', self.on_page_up)
         self.bind('<Key>', self.on_key)
-        self.bind('<Control-o>', self.on_clip)
+        self.bind('<Control-e>', self.on_clip)
 
 
 class AudioKeeper:
