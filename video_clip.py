@@ -155,6 +155,7 @@ class AudioBox(tk.Canvas):  # pylint: disable=too-many-ancestors
 
     def on_clip(self, event):  # pylint: disable=unused-argument
         """根据标签切分视频"""
+        self.audio_keeper.save_label()  # 保存标签
         out_name = input("请输入文件名：")
         if out_name.strip() == '':
             out_name = './output.mp4'
