@@ -25,5 +25,8 @@
 - 取消标注：BackSpace
 - 下一页：F、Return、或Down
 - 上一页：B或Up
-- 保存标注：S，输出labels.npy
-- 导出视频：Ctrl+O，输出output.mp4
+- 页面跳转：G
+- 打开新视频：O
+- 导出视频：Ctrl+E
+- 保存标注：S
+
