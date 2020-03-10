@@ -218,9 +218,9 @@ class AudioKeeper:
         self.sample_step = sample_step
         self.labels = None
         if os.path.exists(f'{label_name}.npy'):  # 若标签已存在则导入
-            self.labels = np.load(f'{label_name}.npy')
+            self.labels = np.load(f'{label_name}.npy').astype(np.int8)
         if self.labels is None or len(self.labels) != len(audio):
-            self.labels = np.array([0] * len(audio))
+            self.labels = np.array([0] * len(audio), dtype=np.int8)
         self.page_overlap = 5000
         self.page_size = int(page_size * sample_step - self.page_overlap)
         self.audio_sample_rate = audio_sample_rate
