@@ -145,7 +145,10 @@ class AudioBox(tk.Canvas):  # pylint: disable=too-many-ancestors
 
     def go_page(self):
         """跳转页码"""
-        page_num = input('请输入页码：')
+        try:
+            page_num = input('请输入页码：')
+        except:
+            page_num = ''
         if page_num == '':
             page_num = self.audio_keeper.max_page
         elif not page_num.isdigit():
@@ -192,10 +195,10 @@ class AudioBox(tk.Canvas):  # pylint: disable=too-many-ancestors
     def on_clip(self, event):  # pylint: disable=unused-argument
         """根据标签切分视频"""
         self.audio_keeper.save_label()  # 保存标签
-        out_name = self.video_name + '.mp4'
+        out_name = self.video_name + '-clip.mp4'
         print('视频导出中，可能需要几分钟时间，请耐心等待... ...')
         clip_video(self.video, self.audio_keeper.labels, out_name, self.audio_keeper.audio_sample_rate)
-        print('视频剪切成功！')
+        print('视频导出成功！')
 
     def bind_events(self):
         self.focus_set()
