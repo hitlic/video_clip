@@ -339,7 +339,13 @@ def clip_video(video, labels, out_file, sample_rate=44100):
 
 
 def clip_video_by_file(video_file, label_file, out_file, sample_rate=44100):
-    """根据标签文件剪切视频文件"""
+    """
+    根据标签文件剪切视频文件。
+    uage:
+        video_file = './video_to_clip.mp4'
+        label_file = './label.npy'
+        clip_video(video_file, label_file, 'cliped_video.mp4', sample_rate=22050)
+    """
     video = VideoFileClip(video_file)
     labels = np.load(label_file)
     # 查找片段
