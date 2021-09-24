@@ -338,5 +338,32 @@ def clip_video(video, labels, out_file, sample_rate=44100):
                                temp_audiofile=audio_file, remove_temp=False)
 
 
+def clip_video_by_file(video_file, label_file, out_file, sample_rate=44100):
+    """根据标签文件剪切视频文件"""
+    video = VideoFileClip(video_file)
+    labels = np.load(label_file)
+    # 查找片段
+    seg_points = np.nonzero(labels[:-1] != labels[1:])[0]
+    seg_points += 1
+    if labels[0] == 0:
+        seg_points = np.insert(seg_points, 0, 0)
+    if labels[-1] == 0:
+        seg_points = np.append(seg_points, len(labels)-1)
+    starts = seg_points[::2]
+    ends = seg_points[1::2]
+
+    # 根据片段提取视频
+    videos = []
+    for start, end in tqdm(list(zip(starts, ends)), desc="视频片段提取"):
+        videos.append(video.subclip(start/sample_rate, end/sample_rate))
+
+    # 合并视频
+    cat_videos = concatenate_videoclips(videos)
+    # 保存视频
+    audio_file = out_file.replace('.mp4', '-audio.mp4')
+    cat_videos.write_videofile(out_file, fps=24, audio_fps=sample_rate, audio_codec="aac",
+                               temp_audiofile=audio_file, remove_temp=False)
+    
+    
 if __name__ == '__main__':
     main(window)
